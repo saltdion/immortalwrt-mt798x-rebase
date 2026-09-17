@@ -1,5 +1,11 @@
 # ImmortalWrt - MT798x
 
+## 本 Fork：AX6000 110M 定时构建
+
+每周五北京时间 **01:00** 自动同步上游 `25.12`，有尚未成功发布的源码或构建配置时编译厂商无线驱动精简版，并发布 Release。
+
+默认管理分支为 `codex/build-ax6000`；`25.12` 专门用于同步上游。支持手动强制编译及仅检查模式。完整说明见 [自动构建说明](build-config/README.md)。
+
 ```
 This repository is worked on ImmortalWrt with MTK OpenWrt Feeds patches imported.
 ```
@@ -53,4 +59,4 @@ feat(ucode): add get all device map support
 | **AP/ApCli**  |      ✔️       |   ⚠️(**Untested**)       |
 
 ## Acknowledgements
-HNAT support for external devices is adapted from [Padavanonly's repo](https://github.com/padavanonly/immortalwrt-mt798x-6.6). 
+HNAT support for external devices is adapted from [Padavanonly's repo](https://github.com/padavanonly/immortalwrt-mt798x-6.6).

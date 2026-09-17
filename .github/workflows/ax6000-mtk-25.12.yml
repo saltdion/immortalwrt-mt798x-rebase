@@ -1,0 +1,120 @@
+name: AX6000 110M 厂商驱动精简版 25.12
+
+on:
+  schedule:
+    # UTC 周四 17:00 = 北京时间周五 01:00。
+    - cron: '0 17 * * 4'
+  workflow_dispatch:
+    inputs:
+      force:
+        description: 强制编译（即使当前源码和配置已发布）
+        type: boolean
+        default: false
+      check_only:
+        description: 仅检查同步和构建判定，不编译
+        type: boolean
+        default: false
+
+permissions:
+  contents: write
+
+concurrency:
+  group: ax6000-mtk-25.12
+  cancel-in-progress: false
+
+env:
+  TZ: Asia/Shanghai
+
+jobs:
+  check:
+    name: 同步上游并检查发布记录
+    runs-on: ubuntu-24.04
+    outputs:
+      sha: ${{ steps.check.outputs.sha }}
+      tag: ${{ steps.check.outputs.tag }}
+      build: ${{ steps.check.outputs.build }}
+    steps:
+      - uses: actions/checkout@v4
+      - name: 同步 25.12 源码分支
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          # 不使用强制同步；分支冲突时失败，保护已有提交。
+          gh repo sync "$GITHUB_REPOSITORY" --source chasey-dev/immortalwrt-mt798x-rebase --branch 25.12
+      - name: 检查当前源码与配置是否已成功发布
+        id: check
+        env:
+          GH_TOKEN: ${{ github.token }}
+          FORCE_BUILD: ${{ inputs.force }}
+        run: python3 build-config/check_release.py
+
+  build:
+    name: 编译并发布 AX6000 固件
+    needs: check
+    if: needs.check.outputs.build == 'true' && inputs.check_only != true
+    runs-on: ubuntu-24.04
+    timeout-minutes: 360
+    steps:
+      - name: 读取管理配置
+        uses: actions/checkout@v4
+        with:
+          path: management
+      - name: 获取已同步的固定源码提交
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ needs.check.outputs.sha }}
+          path: firmware
+          persist-credentials: false
+      - name: 安装编译依赖
+        run: |
+          sudo timedatectl set-timezone Asia/Shanghai
+          sudo apt-get update
+          sudo apt-get install -y build-essential clang flex bison g++ gawk gcc-multilib g++-multilib gettext git libncurses-dev libssl-dev python3 python3-setuptools python3-pyelftools rsync swig unzip zlib1g-dev file wget curl patch quilt subversion xsltproc libelf-dev libtool autoconf automake cmake ninja-build pkgconf ccache bzip2 zstd
+          df -h
+      - name: 更新并安装 feeds
+        working-directory: firmware
+        run: |
+          ./scripts/feeds update -a
+          ./scripts/feeds install -a
+      - name: 生成并验证单设备精简配置
+        run: |
+          python3 management/build-config/prepare_config.py firmware management/build-config/compact.config
+          cd firmware
+          make defconfig
+          python3 ../management/build-config/prepare_config.py --verify .
+          mkdir -p ../release-files
+          cp .config ../release-files/ax6000-build.config
+          ./scripts/diffconfig.sh > ../release-files/ax6000-diff.config
+          ./scripts/feeds list -s > ../release-files/feeds-sources.txt
+          for feed in feeds/*; do
+            if [ -d "$feed/.git" ] || [ -f "$feed/.git" ]; then
+              printf '%s %s\n' "$feed" "$(git -C "$feed" rev-parse HEAD)"
+            fi
+          done > ../release-files/feeds-revisions.txt
+      - name: 下载源码包
+        working-directory: firmware
+        run: make download -j8
+      - name: 编译固件
+        working-directory: firmware
+        run: make -j"$(nproc)" || make -j1 V=s
+      - name: 整理固件和构建信息
+        env:
+          SOURCE_SHA: ${{ needs.check.outputs.sha }}
+          RELEASE_TAG: ${{ needs.check.outputs.tag }}
+        run: |
+          python3 management/build-config/collect_release.py firmware release-files
+      - name: 保存构建产物
+        uses: actions/upload-artifact@v4
+        with:
+          name: ax6000-mtk-25.12-${{ github.run_id }}
+          path: release-files/
+          retention-days: 14
+          if-no-files-found: error
+      - name: 发布 Release
+        env:
+          GH_TOKEN: ${{ github.token }}
+          RELEASE_TAG: ${{ needs.check.outputs.tag }}
+          SOURCE_SHA: ${{ needs.check.outputs.sha }}
+        run: |
+          # 先上传到草稿，全部成功才发布；失败草稿不会作为成功记录。
+          python3 management/build-config/publish_release.py release-files
