@@ -102,6 +102,7 @@ jobs:
           SOURCE_SHA: ${{ needs.check.outputs.sha }}
           RELEASE_TAG: ${{ needs.check.outputs.tag }}
         run: |
+          python3 management/build-config/prepare_config.py --verify-kernel firmware
           python3 management/build-config/collect_release.py firmware release-files
       - name: 保存构建产物
         uses: actions/upload-artifact@v4

@@ -23,7 +23,8 @@ def verify(root):
     for key in [TARGET, 'CONFIG_PACKAGE_kmod-mt_wifi', 'CONFIG_PACKAGE_kmod-warp',
                 'CONFIG_PACKAGE_kmod-mediatek_hnat', 'CONFIG_PACKAGE_luci-app-mtwifi-cfg',
                 'CONFIG_PACKAGE_luci-app-autoreboot', 'CONFIG_PACKAGE_luci-app-arpbind',
-                'CONFIG_KERNEL_BPF', 'CONFIG_KERNEL_DEBUG_INFO_BTF',
+                'CONFIG_KERNEL_CGROUP_BPF', 'CONFIG_KERNEL_BPF_STREAM_PARSER',
+                'CONFIG_KERNEL_BPF_EVENTS', 'CONFIG_KERNEL_DEBUG_INFO_BTF',
                 'CONFIG_PACKAGE_kmod-sched-bpf', 'CONFIG_PACKAGE_kmod-xdp-sockets-diag']:
         assert config.get(key) == 'y', f'必要配置未生效：{key}'
     for key in ['CONFIG_TARGET_MULTI_PROFILE', 'CONFIG_PACKAGE_kmod-mt7915e',
@@ -35,8 +36,24 @@ def verify(root):
     print('单设备、厂商无线驱动、110M 分区及精简配置检查通过')
 
 
+def verify_kernel(root):
+    # 顶层 CONFIG_KERNEL_* 与 Linux 的 CONFIG_* 不是一一对应；检查最终内核配置。
+    paths = list((root / 'build_dir').glob('target-*/linux-mediatek_filogic/linux-*/.config'))
+    assert len(paths) == 1, f'预期一个已生成的内核配置，实际找到 {len(paths)} 个'
+    config = parse(paths[0].read_text())
+    for key in ['CONFIG_BPF', 'CONFIG_BPF_SYSCALL', 'CONFIG_BPF_JIT',
+                'CONFIG_CGROUP_BPF', 'CONFIG_BPF_STREAM_PARSER',
+                'CONFIG_BPF_EVENTS', 'CONFIG_DEBUG_INFO_BTF', 'CONFIG_XDP_SOCKETS']:
+        assert config.get(key) == 'y', f'实际内核缺少必要功能：{key}'
+    for key in ['CONFIG_NET_CLS_BPF', 'CONFIG_NET_ACT_BPF', 'CONFIG_XDP_SOCKETS_DIAG']:
+        assert config.get(key) in ('y', 'm'), f'实际内核缺少必要模块：{key}'
+    print('实际 Linux 内核 BPF/BTF/XDP 配置检查通过')
+
+
 if __name__ == '__main__':
-    if sys.argv[1] == '--verify':
+    if sys.argv[1] == '--verify-kernel':
+        verify_kernel(Path(sys.argv[2]))
+    elif sys.argv[1] == '--verify':
         verify(Path(sys.argv[2]))
     else:
         root = Path(sys.argv[1])
