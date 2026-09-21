@@ -2,6 +2,18 @@
 
 ## 本 Fork：AX6000 110M 定时构建
 
+### 固件下载列表
+
+仅显示最近一次已成功发布且包含 sysupgrade 镜像的记录，时间为北京时间。编译发布后自动刷新。
+
+<!-- firmware-downloads:start -->
+
+| 发布时间（北京时间） | 固件 | 下载 |
+| --- | --- | --- |
+| 2026-09-17 15:28:53 | AX6000 110M MTK compact 25.12 | [sysupgrade](https://github.com/saltdion/immortalwrt-mt798x-rebase/releases/download/ax6000-mtk-25.12-dea037c4c6bb-4208e5be376a/immortalwrt-mediatek-filogic-xiaomi_redmi-router-ax6000-mtkuboot-squashfs-sysupgrade.bin) |
+
+<!-- firmware-downloads:end -->
+
 每周五北京时间 **01:00** 自动同步上游 `25.12`，有尚未成功发布的源码或构建配置时编译厂商无线驱动精简版，并发布 Release。
 
 默认管理分支为 `codex/build-ax6000`；`25.12` 专门用于同步上游。支持手动强制编译及仅检查模式。完整说明见 [自动构建说明](build-config/README.md)。

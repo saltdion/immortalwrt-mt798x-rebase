@@ -24,7 +24,7 @@
 - 保留上游默认登录地址和无线初始行为，不预置个人订阅或固定 Wi-Fi 密码。
 - 构建后检查关键驱动、BPF 配置和 110M 分区定义；不满足要求时停止发布。
 
-Release 只上传 AX6000 factory/sysupgrade 固件、包清单、构建配置、feeds 版本信息及 SHA256 校验文件。Artifact 保留 14 天，历史 Release 不自动清理。
+Release 只上传 AX6000 factory/sysupgrade 固件、包清单及对应的 SHA256 校验文件。`ax6000-build.config`、`ax6000-diff.config`、`build-info.txt`、`feeds-revisions.txt`、`feeds-sources.txt` 仅保留在 Artifact 中，不上传到 Release。Artifact 保留 14 天，历史 Release 不自动清理。README 自动列出最新 sysupgrade 镜像，文档自动更新不会单独触发重复编译。
 
 ## 验证边界
 

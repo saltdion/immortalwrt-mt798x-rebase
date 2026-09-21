@@ -20,4 +20,5 @@ if __name__ == '__main__':
         shutil.copy2(path, output / path.name)
     now = datetime.now(ZoneInfo('Asia/Shanghai')).isoformat()
     (output / 'build-info.txt').write_text(f'北京时间：{now}\n源码提交：{os.environ["SOURCE_SHA"]}\n配置提交：{os.environ["GITHUB_SHA"]}\n设备：xiaomi_redmi-router-ax6000-mtkuboot\n布局：UBI 起始 0x600000，容量 0x6e00000（110 MiB）\n')
-    (output / 'sha256sums').write_text(''.join(f'{hashlib.sha256(p.read_bytes()).hexdigest()}  {p.name}\n' for p in sorted(output.iterdir()) if p.is_file() and p.name != 'sha256sums'))
+    # 校验表只引用 Release 中实际上传的镜像与包清单。
+    (output / 'sha256sums').write_text(''.join(f'{hashlib.sha256(p.read_bytes()).hexdigest()}  {p.name}\n' for p in sorted(output.iterdir()) if p.is_file() and p.suffix in ('.bin', '.manifest')))

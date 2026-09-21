@@ -1,0 +1,24 @@
+name: 更新固件下载列表
+on:
+  workflow_dispatch:
+  workflow_run:
+    workflows: ['AX6000 110M 厂商驱动精简版 25.12']
+    types: [completed]
+permissions:
+  contents: write
+concurrency:
+  group: update-firmware-downloads
+  cancel-in-progress: false
+jobs:
+  update:
+    if: github.event_name != 'workflow_run' || github.event.workflow_run.conclusion == 'success'
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: codex/build-ax6000
+          persist-credentials: false
+      - name: 刷新最新 sysupgrade 下载链接
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: python3 build-config/update_downloads.py --publish

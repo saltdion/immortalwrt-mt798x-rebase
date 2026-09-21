@@ -1,5 +1,6 @@
 """根据上次成功发布判定是否编译，失败后下一次定时运行会重试。"""
 import json
+import hashlib
 import os
 import subprocess
 from pathlib import Path
@@ -19,7 +20,10 @@ if __name__ == '__main__':
     branch = api(f'repos/{repo}/branches/25.12')
     assert branch, '源码分支不存在'
     sha = branch['commit']['sha']
-    config_sha = os.environ['GITHUB_SHA']
+    # README 自动刷新不属于构建配置变更，避免因此每周重复编译。
+    objects = subprocess.check_output(['git', 'rev-parse', 'HEAD:build-config',
+                                      'HEAD:.github/workflows/ax6000-mtk-25.12.yml'])
+    config_sha = hashlib.sha256(objects).hexdigest()
     tag = f'ax6000-mtk-25.12-{sha[:12]}-{config_sha[:12]}'
     release = api(f'repos/{repo}/releases/tags/{tag}')
     build = os.environ.get('FORCE_BUILD') == 'true' or not release or release['draft']
