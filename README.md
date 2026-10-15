@@ -10,7 +10,7 @@
 
 | 发布时间（北京时间） | 固件 | 下载 |
 | --- | --- | --- |
-| 2026-10-09 06:45:57 | AX6000 110M MTK compact 25.12 | [sysupgrade](https://github.com/saltdion/immortalwrt-mt798x-rebase/releases/download/ax6000-mtk-25.12-ae65e1de6997-88b0db0057c6/immortalwrt-mediatek-filogic-xiaomi_redmi-router-ax6000-mtkuboot-squashfs-sysupgrade.bin) |
+| 2026-10-16 05:19:54 | AX6000 110M MTK compact 25.12 | [sysupgrade](https://github.com/saltdion/immortalwrt-mt798x-rebase/releases/download/ax6000-mtk-25.12-5c5c94e5b945-88b0db0057c6/immortalwrt-mediatek-filogic-xiaomi_redmi-router-ax6000-mtkuboot-squashfs-sysupgrade.bin) |
 
 <!-- firmware-downloads:end -->
 
